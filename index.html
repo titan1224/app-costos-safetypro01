@@ -4,7 +4,6 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
   <meta name="theme-color" content="#06080F"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
   <title>SAFETY PRO — Costeo Overoles</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -868,6 +867,13 @@ const SLOTS = [
     opcionesFR:  [{ id:"bolsa_transp", nombre:"BOLSA TRANSPARENTE SENCILLA NACIONAL", precio:300.00, um:"UND", marca:"NACIONAL", consumos:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1] }],
     opcionesARC: [{ id:"bolsa_transp", nombre:"BOLSA TRANSPARENTE SENCILLA NACIONAL", precio:300.00, um:"UND", marca:"NACIONAL", consumos:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1] }],
   },
+  {
+    id: "bordados", label: "Costo Bordados", icon: "🪡",
+    categoria: "Acabados",
+    precioManual: true,
+    opcionesFR:  [{ id:"bordado_manual", nombre:"BORDADOS (precio manual)", precio:0, um:"UND", marca:"", consumos:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1] }],
+    opcionesARC: [{ id:"bordado_manual", nombre:"BORDADOS (precio manual)", precio:0, um:"UND", marca:"", consumos:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1] }],
+  },
 ];
 
 const OP_DATA = {
@@ -1042,11 +1048,78 @@ function th(align = "center", px = 8, w) {
 }
 
 // ─── SELECT SLOT ───────────────────────────────────────────────────────────
-function SelectSlot({ slot, categoria, seleccion, onChange }) {
+function SelectSlot({ slot, categoria, seleccion, onChange, precioManualVal, onPrecioManual }) {
   const mob = useIsMobile();
   const opts = categoria === "FR" ? slot.opcionesFR : slot.opcionesARC;
   const sel  = opts.find(o => o.id === seleccion);
   const cc   = CAT_COLOR[categoria] || T.cyan;
+
+  // ── Slot con precio manual (ej: bordados) ──
+  if (slot.precioManual) {
+    const activo = precioManualVal > 0;
+    return (
+      React.createElement('div', { style: {
+        borderRadius: 6, marginBottom: 2, overflow: "hidden",
+        border: activo ? `1px solid ${cc}55` : `1px solid ${T.border}`,
+        background: activo ? cc + "0A" : T.surface,
+      },}
+        , React.createElement('div', { style: { display: "grid", gridTemplateColumns: mob ? "1fr" : "170px 1fr auto", alignItems: "center" },}
+          /* label */
+          , React.createElement('div', { style: {
+            padding: mob ? "8px 12px" : "10px 14px",
+            borderRight: mob ? "none" : `1px solid ${T.border}`,
+            borderBottom: mob ? `1px solid ${T.border}` : "none",
+            display: "flex", alignItems: "center", gap: 8, background: T.bg,
+          },}
+            , React.createElement('span', { style: { fontSize: 16 },}, slot.icon)
+            , React.createElement('div', { style: { flex: 1 },}
+              , React.createElement('div', { style: { fontSize: 12, fontWeight: 700, color: T.text },}, slot.label)
+              , React.createElement('div', { style: { fontSize: 10, color: T.muted, fontFamily: "'Space Mono', monospace" },}, slot.categoria)
+            )
+            , mob && activo && (
+              React.createElement('div', { style: { textAlign: "right" },}
+                , React.createElement('div', { style: { fontSize: 11, fontWeight: 700, color: cc, fontFamily: "'Space Mono', monospace" },}, fmtCOP(precioManualVal))
+                , React.createElement('div', { style: { fontSize: 9, color: T.muted },}, "/UND")
+              )
+            )
+          )
+          /* input precio */
+          , React.createElement('div', { style: { padding: "6px 10px", display: "flex", alignItems: "center", gap: 8 },}
+            , React.createElement('span', { style: { fontSize: 11, color: T.muted, whiteSpace: "nowrap", fontFamily: "'Space Mono', monospace" },}, "$ COP" )
+            , React.createElement('input', {
+              type: "number",
+              min: "0",
+              step: "100",
+              placeholder: "0  —  ingresa precio/prenda"     ,
+              value: precioManualVal || "",
+              onChange: e => onPrecioManual(slot.id, parseFloat(e.target.value) || 0),
+              style: {
+                ...inputStyle,
+                flex: 1,
+                padding: "7px 10px",
+                fontFamily: "'Space Mono', monospace",
+                fontSize: 13,
+                color: activo ? cc : T.muted,
+              },}
+            )
+          )
+          /* price pill desktop */
+          , !mob && (
+            React.createElement('div', { style: { padding: "6px 14px", minWidth: 130, textAlign: "right" },}
+              , activo ? (
+                React.createElement('div', null
+                  , React.createElement('div', { style: { fontSize: 13, fontWeight: 800, color: cc, fontFamily: "'Space Mono', monospace" },}, fmtCOP(precioManualVal))
+                  , React.createElement('div', { style: { fontSize: 9, color: T.muted, marginTop: 1 },}, "/UND")
+                )
+              ) : React.createElement('span', { style: { fontSize: 10, color: T.muted },}, "—")
+            )
+          )
+        )
+      )
+    );
+  }
+
+  // ── Slot normal con select ──
   return (
     React.createElement('div', { style: {
       borderRadius: 6, marginBottom: 2, overflow: "hidden",
@@ -1335,6 +1408,7 @@ function App() {
   const [cants, setCants]= useState({});
   const [sels,  setSels] = useState({});
   const [sub,   setSub]  = useState(false);
+  const [preciosManual, setPreciosManual] = useState({});
 
   const catColor  = CAT_COLOR[cat]  || T.cyan;
   const tipoColor = TIPO_COLOR[tipo] || T.cyan;
@@ -1366,10 +1440,25 @@ function App() {
 
   const resultados = useMemo(() => {
     if (!cat) return [];
-    return SLOTS.map(slot => ({
-      slot, calc: calcularSlot(slot, sels[slot.id], cants, tipo)
-    })).filter(r => r.calc !== null);
-  }, [sels, cants, cat, tipo]);
+    return SLOTS.map(slot => {
+      if (slot.precioManual) {
+        const precio = preciosManual[slot.id] || 0;
+        if (!precio) return { slot, calc: null };
+        return {
+          slot,
+          calc: {
+            nombre: "Bordados (manual)",
+            um: "UND",
+            precio,
+            consumoUnit: 1,
+            costoUnit: precio,
+            costoTotal: precio * total,
+          }
+        };
+      }
+      return { slot, calc: calcularSlot(slot, sels[slot.id], cants, tipo) };
+    }).filter(r => r.calc !== null);
+  }, [sels, cants, cat, tipo, preciosManual, total]);
 
   const costoUnit  = resultados.reduce((a,r) => a+(_optionalChain([r, 'access', _6 => _6.calc, 'optionalAccess', _7 => _7.costoUnit])||0),0);
   const costoTotal = costoUnit * total;
@@ -1536,7 +1625,10 @@ function App() {
               )
               , React.createElement('div', { style: { padding:8 },}
                 , SLOTS.map(s => (
-                  React.createElement(SelectSlot, { key: s.id, slot: s, categoria: cat, seleccion: sels[s.id], onChange: handleSel,} )
+                  React.createElement(SelectSlot, { key: s.id, slot: s, categoria: cat, seleccion: sels[s.id], onChange: handleSel,
+                    precioManualVal: preciosManual[s.id] || 0,
+                    onPrecioManual: (id, val) => setPreciosManual(prev => ({...prev, [id]: val})),}
+                  )
                 ))
               )
             )
