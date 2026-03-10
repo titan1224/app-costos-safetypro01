@@ -3,23 +3,23 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
-  <meta name="theme-color" content="#06080F"/>
+  <meta name="theme-color" content="#060D1F"/>
   <title>SAFETY PRO — Costeo Overoles</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    html,body{background:#06080F;min-height:100vh}
+    html,body{background:#060D1F;min-height:100vh}
     body{font-family:'Barlow Condensed',sans-serif;-webkit-tap-highlight-color:transparent}
     #root{min-height:100vh}
     input[type=number]::-webkit-inner-spin-button,
     input[type=number]::-webkit-outer-spin-button{opacity:1}
     select,input,button{touch-action:manipulation}
-    input:focus,select:focus{outline:2px solid #00FFD1;outline-offset:-1px}
+    input:focus,select:focus{outline:2px solid #C89B3C;outline-offset:-1px}
     ::-webkit-scrollbar{width:5px}
-    ::-webkit-scrollbar-track{background:#0D1117}
-    ::-webkit-scrollbar-thumb{background:#1F2A3C;border-radius:3px}
+    ::-webkit-scrollbar-track{background:#0A1628}
+    ::-webkit-scrollbar-thumb{background:#1A3055;border-radius:3px}
   </style>
 </head>
 <body>
@@ -938,23 +938,23 @@ const inputBase = {background:"#080B12",border:"1px solid #30363d",borderRadius:
 
 // ─── DESIGN TOKENS ───────────────────────────────────────────────────────────
 const T = {
-  bg:       "#06080F",
-  surface:  "#0D1117",
-  card:     "#111827",
-  border:   "#1F2A3C",
-  borderHi: "#2D3F5C",
-  cyan:     "#00FFD1",
-  orange:   "#FF5F1F",
-  yellow:   "#FFE600",
-  pink:     "#FF2D78",
-  blue:     "#0EA5E9",
-  text:     "#F0F6FF",
-  muted:    "#4A6080",
-  dim:      "#1E2D40",
+  bg:       "#060D1F",   // azul marino muy oscuro
+  surface:  "#0A1628",   // azul marino oscuro
+  card:     "#0F1E35",   // azul marino medio
+  border:   "#1A3055",   // azul marino borde
+  borderHi: "#2A4A7A",   // azul marino borde highlight
+  cyan:     "#C89B3C",   // dorado UnderProtection (acento principal)
+  orange:   "#E0AE4A",   // dorado claro
+  yellow:   "#F5D06A",   // dorado brillante
+  pink:     "#A67C28",   // dorado oscuro
+  blue:     "#4A90D9",   // azul acento
+  text:     "#EEF2FF",   // blanco azulado
+  muted:    "#4A6A9A",   // azul grisáceo
+  dim:      "#0D2040",   // azul profundo
 };
 
-const CAT_COLOR = { FR: T.orange, ARC: T.pink };
-const TIPO_COLOR = { A: T.cyan, B: T.orange, C: T.pink };
+const CAT_COLOR = { FR: "#E0AE4A", ARC: "#4A90D9" };
+const TIPO_COLOR = { A: "#C89B3C", B: "#E0AE4A", C: "#4A90D9" };
 
 // ─── BASE STYLES ─────────────────────────────────────────────────────────────
 const inputStyle = {
@@ -1560,7 +1560,7 @@ function App() {
       fontFamily: "'Barlow Condensed', sans-serif",
       fontSize: 15,
       paddingBottom: 80,
-      backgroundImage: `radial-gradient(ellipse at 10% 0%, ${T.orange}0C 0%, transparent 50%), radial-gradient(ellipse at 90% 100%, ${T.cyan}0C 0%, transparent 50%)`,
+      backgroundImage: `radial-gradient(ellipse at 10% 0%, #C89B3C12 0%, transparent 50%), radial-gradient(ellipse at 90% 100%, #1A3A7A18 0%, transparent 50%)`,
     },}
 
       /* ══ BANNER INMADICA ══════════════════════════════════════════════════ */
@@ -1574,7 +1574,7 @@ function App() {
 
       /* ══ SUBHEADER ════════════════════════════════════════════════════════ */
       , React.createElement('div', { style: {
-        background:`linear-gradient(180deg,#0E1828 0%,${T.bg} 100%)`,
+        background:`linear-gradient(180deg,#0A1A35 0%,${T.bg} 100%)`,
         borderBottom:`1px solid ${T.cyan}33`,
         padding: mob?"8px 14px":"10px 28px",
         position:"relative", overflow:"hidden",
