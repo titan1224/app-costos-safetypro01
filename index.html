@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     html,body,#root{background:#060D1F;min-height:100vh}
@@ -873,6 +874,13 @@ const SLOTS = [
     opcionesFR:  [{ id:"bordado_manual", nombre:"BORDADOS (precio manual)", precio:0, um:"UND", marca:"", consumos:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1] }],
     opcionesARC: [{ id:"bordado_manual", nombre:"BORDADOS (precio manual)", precio:0, um:"UND", marca:"", consumos:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1] }],
   },
+  {
+    id: "tela_adicional", label: "Tela Adicional", icon: "🧶",
+    categoria: "Telas",
+    telaAdicional: true,
+    opcionesFR:  TODAS_LAS_TELAS,
+    opcionesARC: TODAS_LAS_TELAS,
+  },
 ];
 
 const OP_DATA = {
@@ -1047,7 +1055,7 @@ function th(align = "center", px = 8, w) {
 }
 
 // ─── SELECT SLOT ───────────────────────────────────────────────────────────
-function SelectSlot({ slot, categoria, seleccion, onChange, precioManualVal, onPrecioManual }) {
+function SelectSlot({ slot, categoria, seleccion, onChange, precioManualVal, onPrecioManual, telaConsumo, onTelaConsumo }) {
   const mob = useIsMobile();
   const opts = categoria === "FR" ? slot.opcionesFR : slot.opcionesARC;
   const sel  = opts.find(o => o.id === seleccion);
@@ -1111,6 +1119,94 @@ function SelectSlot({ slot, categoria, seleccion, onChange, precioManualVal, onP
                   , React.createElement('div', { style: { fontSize: 9, color: T.muted, marginTop: 1 },}, "/UND")
                 )
               ) : React.createElement('span', { style: { fontSize: 10, color: T.muted },}, "—")
+            )
+          )
+        )
+      )
+    );
+  }
+
+  // ── Slot tela adicional: select tela + consumo manual ──
+  if (slot.telaAdicional) {
+    const sel = opts.find(o => o.id === seleccion);
+    const costoUnit = sel && telaConsumo > 0 ? sel.precio * telaConsumo : 0;
+    const activo = sel && telaConsumo > 0;
+    return (
+      React.createElement('div', { style: {
+        borderRadius: 6, marginBottom: 2, overflow: "hidden",
+        border: activo ? `1px solid ${cc}55` : `1px solid ${T.border}`,
+        background: activo ? cc + "0A" : T.surface,
+      },}
+        /* Fila 1: label + select tela */
+        , React.createElement('div', { style: { display: "grid", gridTemplateColumns: mob ? "1fr" : "170px 1fr auto", alignItems: "center" },}
+          , React.createElement('div', { style: {
+            padding: mob ? "8px 12px" : "10px 14px",
+            borderRight: mob ? "none" : `1px solid ${T.border}`,
+            borderBottom: mob ? `1px solid ${T.border}` : "none",
+            display: "flex", alignItems: "center", gap: 8, background: T.bg,
+          },}
+            , React.createElement('span', { style: { fontSize: 16 },}, slot.icon)
+            , React.createElement('div', null
+              , React.createElement('div', { style: { fontSize: 12, fontWeight: 700, color: T.text },}, slot.label)
+              , React.createElement('div', { style: { fontSize: 10, color: T.muted, fontFamily: "'Space Mono', monospace" },}, slot.categoria)
+            )
+          )
+          , React.createElement('div', { style: { padding: "6px 10px" },}
+            , React.createElement('select', { value: seleccion || "__none__", onChange: e => onChange(slot.id, e.target.value), style: {
+              ...inputStyle, padding: "7px 10px",
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234A6080'/%3E%3C/svg%3E")`,
+              backgroundRepeat: "no-repeat", backgroundPosition: "right 10px center", appearance: "none", cursor: "pointer",
+            },}
+              , React.createElement('option', { value: "__none__",}, "— Selecciona tela adicional —"    )
+              , opts.map(o => React.createElement('option', { key: o.id, value: o.id,}, o.nombre, " · "  , fmtCOP(o.precio), "/", o.um))
+            )
+          )
+          , !mob && (
+            React.createElement('div', { style: { padding: "6px 14px", minWidth: 130, textAlign: "right" },}
+              , sel ? (
+                React.createElement('div', null
+                  , React.createElement('div', { style: { fontSize: 12, fontWeight: 700, color: cc, fontFamily: "'Space Mono', monospace" },}, fmtCOP(sel.precio))
+                  , React.createElement('div', { style: { fontSize: 9, color: T.muted },}, "/LM")
+                )
+              ) : React.createElement('span', { style: { fontSize: 10, color: T.muted },}, "—")
+            )
+          )
+        )
+        /* Fila 2: consumo manual (solo si hay tela seleccionada) */
+        , sel && (
+          React.createElement('div', { style: {
+            borderTop: `1px solid ${T.border}`,
+            display: "grid", gridTemplateColumns: mob ? "1fr" : "170px 1fr auto", alignItems: "center",
+            background: T.bg + "80",
+          },}
+            , React.createElement('div', { style: { padding: mob ? "6px 12px" : "7px 14px", fontSize: 11, color: T.muted, borderRight: mob ? "none" : `1px solid ${T.border}` },}, "📐 Consumo adicional"
+
+            )
+            , React.createElement('div', { style: { padding: "6px 10px", display: "flex", alignItems: "center", gap: 8 },}
+              , React.createElement('input', {
+                type: "number",
+                min: "0",
+                step: "0.01",
+                placeholder: "0.00  —  metros/prenda"    ,
+                value: telaConsumo || "",
+                onChange: e => onTelaConsumo(parseFloat(e.target.value) || 0),
+                style: {
+                  ...inputStyle, flex: 1, padding: "7px 10px",
+                  fontFamily: "'Space Mono', monospace", fontSize: 13,
+                  color: telaConsumo > 0 ? cc : T.muted,
+                },}
+              )
+              , React.createElement('span', { style: { fontSize: 11, color: T.muted, whiteSpace: "nowrap" },}, "LM/prenda")
+            )
+            , !mob && (
+              React.createElement('div', { style: { padding: "6px 14px", minWidth: 130, textAlign: "right" },}
+                , activo ? (
+                  React.createElement('div', null
+                    , React.createElement('div', { style: { fontSize: 13, fontWeight: 800, color: cc, fontFamily: "'Space Mono', monospace" },}, fmtCOP(costoUnit))
+                    , React.createElement('div', { style: { fontSize: 9, color: T.muted, marginTop: 1 },}, "/prenda")
+                  )
+                ) : React.createElement('span', { style: { fontSize: 10, color: T.muted },}, "—")
+              )
             )
           )
         )
@@ -1399,6 +1495,72 @@ function PrintDoc({ op, tipo, cat, total, costoUnit, costoTotal, resultados, can
 }
 
 
+// ─── BUILD RECETA HTML (para visor QR) ───────────────────────────────────
+function buildRecetaHTML(data) {
+  const fmtN = n => Math.round(n||0).toLocaleString("es-CO");
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Receta OP${data.op||"—"} · Safety Pro</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,sans-serif;background:#060D1F;color:#EEF2FF;padding:16px;font-size:14px}
+  .header{background:#0F1E35;border:1px solid #C89B3C55;border-radius:8px;padding:16px;margin-bottom:14px}
+  .title{font-size:20px;font-weight:900;color:#C89B3C;letter-spacing:2px;text-transform:uppercase}
+  .sub{font-size:11px;color:#4A6A9A;margin-top:3px;letter-spacing:1px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+  .box{background:#060D1F;border-radius:4px;padding:8px 10px;border:1px solid #1A3055}
+  .lbl{font-size:9px;color:#4A6A9A;text-transform:uppercase;letter-spacing:1px}
+  .val{font-size:15px;font-weight:700;color:#EEF2FF;margin-top:2px}
+  .gold{color:#C89B3C}
+  .sec{margin-bottom:12px;background:#0F1E35;border-radius:6px;padding:10px 12px;border:1px solid #1A3055}
+  .sec-title{font-size:9px;color:#C89B3C;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;font-weight:700}
+  .chips{display:flex;flex-wrap:wrap;gap:5px}
+  .chip{background:#1A3055;border-radius:20px;padding:3px 10px;font-size:12px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{background:#0F1E35;color:#C89B3C;font-size:9px;text-transform:uppercase;letter-spacing:1px;padding:7px 5px;text-align:left;border-bottom:1px solid #1A3055}
+  td{padding:7px 5px;border-bottom:1px solid #1A305533;vertical-align:top;word-break:break-word}
+  .tr-tot td{background:#C89B3C18;color:#C89B3C;font-weight:700;border-top:2px solid #C89B3C44}
+  .r{text-align:right;font-family:monospace}
+  .ref{color:#4A6A9A;font-size:10px}
+  .badge{display:inline-block;padding:1px 7px;border-radius:3px;font-size:10px;font-weight:700}
+  .fr{background:#E0AE4A22;color:#E0AE4A;border:1px solid #E0AE4A44}
+  .arc{background:#4A90D922;color:#4A90D9;border:1px solid #4A90D944}
+  .footer{margin-top:14px;font-size:9px;color:#4A6A9A;text-align:center;letter-spacing:1px}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="title">🧥 Safety Pro — Receta de Costos</div>
+  <div class="sub">INMADICA ANDINA · UnderProtection</div>
+  <div class="grid">
+    <div class="box"><div class="lbl">OP N°</div><div class="val">${data.op||"—"}</div></div>
+    <div class="box"><div class="lbl">Tipo / Protección</div><div class="val">${data.tipo||"—"} <span class="badge ${(data.cat||"").toLowerCase()}">${data.cat||""}</span></div></div>
+    <div class="box"><div class="lbl">Total Prendas</div><div class="val">${data.total} uds</div></div>
+    <div class="box"><div class="lbl">Fecha</div><div class="val" style="font-size:13px">${data.fecha}</div></div>
+    <div class="box"><div class="lbl">Costo / Overol</div><div class="val gold">$${fmtN(data.cu)}</div></div>
+    <div class="box"><div class="lbl">Costo Total OP</div><div class="val gold">$${fmtN(data.ct)}</div></div>
+  </div>
+</div>
+<div class="sec">
+  <div class="sec-title">📐 Distribución por Tallas</div>
+  <div class="chips">${(data.tallas||"").split(",").filter(Boolean).map(t=>`<span class="chip">${t.replace(":"," · ")}</span>`).join("")}</div>
+</div>
+<div class="sec" style="padding:0;overflow:hidden">
+  <table>
+    <thead><tr><th>Insumo</th><th>Referencia</th><th>U.M.</th><th class="r">$/Prenda</th><th class="r">Total Lote</th></tr></thead>
+    <tbody>
+      ${(data.items||[]).map(it=>`<tr><td>${it.n}</td><td class="ref">${it.r}</td><td>${it.u}</td><td class="r">$${fmtN(it.cu)}</td><td class="r">$${fmtN(it.ct)}</td></tr>`).join("")}
+      <tr class="tr-tot"><td colspan="3"><b>TOTAL</b></td><td class="r"><b>$${fmtN(data.cu)}</b></td><td class="r"><b>$${fmtN(data.ct)}</b></td></tr>
+    </tbody>
+  </table>
+</div>
+<div class="footer">Generado por Safety Pro · INMADICA ANDINA · ${data.fecha}</div>
+</body></html>`;
+}
+
 function App() {
   const mob = useIsMobile();
   const [op,    setOp]   = useState("");
@@ -1408,6 +1570,10 @@ function App() {
   const [sels,  setSels] = useState({});
   const [sub,   setSub]  = useState(false);
   const [preciosManual, setPreciosManual] = useState({});
+  const [telaAdicionalConsumo, setTelaAdicionalConsumo] = useState(0);
+  const [showQR, setShowQR] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState("");
+  const [qrRecetaData, setQrRecetaData] = useState(null);
 
   const catColor  = CAT_COLOR[cat]  || T.cyan;
   const tipoColor = TIPO_COLOR[tipo] || T.cyan;
@@ -1455,9 +1621,26 @@ function App() {
           }
         };
       }
+      if (slot.telaAdicional) {
+        const opts = cat === "FR" ? slot.opcionesFR : slot.opcionesARC;
+        const sel = opts.find(o => o.id === sels[slot.id]);
+        if (!sel || !telaAdicionalConsumo) return { slot, calc: null };
+        const costoUnit = sel.precio * telaAdicionalConsumo;
+        return {
+          slot,
+          calc: {
+            nombre: sel.nombre,
+            um: sel.um,
+            precio: sel.precio,
+            consumoUnit: telaAdicionalConsumo,
+            costoUnit,
+            costoTotal: costoUnit * total,
+          }
+        };
+      }
       return { slot, calc: calcularSlot(slot, sels[slot.id], cants, tipo) };
     }).filter(r => r.calc !== null);
-  }, [sels, cants, cat, tipo, preciosManual, total]);
+  }, [sels, cants, cat, tipo, preciosManual, total, telaAdicionalConsumo]);
 
   const costoUnit  = resultados.reduce((a,r) => a+(_optionalChain([r, 'access', _6 => _6.calc, 'optionalAccess', _7 => _7.costoUnit])||0),0);
   const costoTotal = costoUnit * total;
@@ -1482,6 +1665,94 @@ function App() {
       setTimeout(() => { document.title = prev; }, 800);
     }, 80);
   };
+
+  const generarQR = () => {
+    const data = {
+      op, tipo, cat, total,
+      cu: Math.round(costoUnit),
+      ct: Math.round(costoTotal),
+      fecha: new Date().toLocaleDateString("es-CO"),
+      tallas: TALLAS.filter(t => Number(cants[t]) > 0).map(t => `${t}:${cants[t]}`).join(","),
+      items: resultados.map(({slot, calc}) => ({
+        n: slot.label,
+        r: calc.nombre.substring(0, 28),
+        u: calc.um,
+        cu: Math.round(calc.costoUnit),
+        ct: Math.round(calc.costoTotal),
+      }))
+    };
+
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+    const base = window.location.href.split('#')[0].split('?')[0];
+    const fullUrl = base + "?r=" + encoded;
+
+    const doQR = () => {
+      try {
+        const qr = window.qrcode(0, 'M');
+        qr.addData(fullUrl);
+        qr.make();
+
+        const moduleCount = qr.getModuleCount();
+        const cellSize = Math.floor(280 / (moduleCount + 8));
+        const margin = Math.floor((280 - cellSize * moduleCount) / 2);
+        const size = 280;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        // Background
+        ctx.fillStyle = '#060D1F';
+        ctx.fillRect(0, 0, size, size);
+
+        // Modules
+        ctx.fillStyle = '#C89B3C';
+        for (let row = 0; row < moduleCount; row++) {
+          for (let col = 0; col < moduleCount; col++) {
+            if (qr.isDark(row, col)) {
+              ctx.fillRect(
+                margin + col * cellSize,
+                margin + row * cellSize,
+                cellSize, cellSize
+              );
+            }
+          }
+        }
+
+        setQrDataUrl(canvas.toDataURL('image/png'));
+        setQrRecetaData(data);
+        setShowQR(true);
+      } catch(e) {
+        alert('Error generando QR: ' + e.message);
+      }
+    };
+
+    // Load qrcode-generator library if not present
+    if (window.qrcode) {
+      doQR();
+    } else {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+      script.onload = doQR;
+      script.onerror = () => alert('No se pudo cargar la librería QR. Verifica tu conexión.');
+      document.head.appendChild(script);
+    }
+  };
+
+  // Al abrir con ?receta= en la URL → mostrar receta directamente
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const r = params.get("receta");
+    if (r) {
+      try {
+        const data = JSON.parse(decodeURIComponent(escape(atob(r))));
+        const html = buildRecetaHTML(data);
+        document.open(); document.write(html); document.close();
+      } catch(e) { console.log("QR decode error", e); }
+    }
+  }, []);
+
 
   const exportarExcel = () => {
     // Load SheetJS dinamically if not loaded
@@ -1693,7 +1964,9 @@ function App() {
                 , SLOTS.map(s => (
                   React.createElement(SelectSlot, { key: s.id, slot: s, categoria: cat, seleccion: sels[s.id], onChange: handleSel,
                     precioManualVal: preciosManual[s.id] || 0,
-                    onPrecioManual: (id, val) => setPreciosManual(prev => ({...prev, [id]: val})),}
+                    onPrecioManual: (id, val) => setPreciosManual(prev => ({...prev, [id]: val})),
+                    telaConsumo: s.telaAdicional ? telaAdicionalConsumo : 0,
+                    onTelaConsumo: s.telaAdicional ? (val) => setTelaAdicionalConsumo(val) : undefined,}
                   )
                 ))
               )
@@ -1739,7 +2012,51 @@ function App() {
               boxShadow:"0 0 16px #4ADE8033",
               width:mob?"100%":"auto",
             },}, "📊 Excel" )
+            , React.createElement('button', { onClick: generarQR, style: {
+              padding:"13px 20px", borderRadius:4, cursor:"pointer",
+              background:"#1A305588", color:T.cyan, border:`1px solid ${T.cyan}66`,
+              fontFamily:"'Space Mono',monospace", fontWeight:700, fontSize:11,
+              letterSpacing:2, textTransform:"uppercase",
+              boxShadow:`0 0 16px ${T.cyan}33`,
+              width:mob?"100%":"auto",
+            },}, "📱 QR Receta"  )
           ))
+
+          /* ── MODAL QR ── */
+          , showQR && (
+            React.createElement('div', { onClick: ()=>setShowQR(false), style: {
+              position:"fixed", inset:0, background:"#000000DD",
+              display:"flex", alignItems:"center", justifyContent:"center",
+              zIndex:9999, padding:20,
+            },}
+              , React.createElement('div', { onClick: e=>e.stopPropagation(), style: {
+                background:T.card, border:`2px solid ${T.cyan}66`,
+                borderRadius:12, padding:24, maxWidth:340, width:"100%",
+                boxShadow:`0 0 60px ${T.cyan}33`,
+                display:"flex", flexDirection:"column", alignItems:"center", gap:14,
+              },}
+                , React.createElement('div', { style: { fontSize:12, color:T.cyan, letterSpacing:3, textTransform:"uppercase", fontFamily:"'Space Mono',monospace", fontWeight:700 },}, "📱 Escanea con tu celular"
+
+                )
+                , qrDataUrl
+                  ? React.createElement('img', { src: qrDataUrl, alt: "QR Receta" , style: { width:260, height:260, borderRadius:6, imageRendering:"pixelated" },} )
+                  : React.createElement('div', { style: { width:260, height:260, display:"flex", alignItems:"center", justifyContent:"center", color:T.muted, fontSize:12 },}, "Generando QR..." )
+                
+                , React.createElement('div', { style: { textAlign:"center", lineHeight:1.7 },}
+                  , React.createElement('div', { style: { fontSize:13, fontWeight:700, color:T.text },}, "OP " , op||"—", " · Tipo "   , tipo||"—", " · "  , cat||"")
+                  , React.createElement('div', { style: { fontSize:11, color:T.muted, fontFamily:"'Space Mono',monospace" },}, total, " prendas · $"   , "{", "Math.round(costoUnit).toLocaleString(\"es-CO\")", "}", "/und")
+                )
+                , React.createElement('div', { style: { fontSize:10, color:T.yellow, textAlign:"center", background:T.yellow+"11", padding:"6px 12px", borderRadius:4, border:`1px solid ${T.yellow}33` },}, "💡 El celular necesita internet para abrir la receta"
+
+                )
+                , React.createElement('button', { onClick: ()=>setShowQR(false), style: {
+                  padding:"8px 28px", borderRadius:4, cursor:"pointer",
+                  background:T.cyan+"22", color:T.cyan, border:`1px solid ${T.cyan}44`,
+                  fontFamily:"'Space Mono',monospace", fontSize:11, letterSpacing:2, fontWeight:700,
+                },}, "✕ CERRAR" )
+              )
+            )
+          )
 
           , React.createElement('button', { onClick: ()=>{setOp("");setTipo("");setCat("");setCants({});setSels({});setSub(false);}, style: {
             padding:"13px 20px", borderRadius:4, cursor:"pointer",
